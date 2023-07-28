@@ -1,22 +1,13 @@
 #include "imports/stdlib.fc";
 #include "imports/params.fc";
 
-{-
-    recv_internal() :
-    1. Deposit
-    2. Owner withdraw
-    3. Change owner
-    4. Transfer message to owner
-    5. Update smc code
--}
-
 global int seqno; ;; Prevnet replay attack
 global int publicKey;
 global slice ownerAddress;
 const int min_ton_for_storage = 1000000000;
 
 ;; Load storage of thid contract
-() load_data() inline {
+() load_data() impure inline_ref {
     ;; Load contract storage cell and converts into slice.
     slice ds = get_data().begin_parse(); 
 
@@ -40,6 +31,12 @@ const int min_ton_for_storage = 1000000000;
     );
 }
 
+{-
+    get method:
+        1. get_smc_balance
+        2. get_seqno
+        3. get_owner
+-}
 int get_smc_balance() method_id {
     [int balance, _] = get_balance(); ;; get_balance() returns tuple [(int)balance of TON, (cell)extra currency]
     return balance;
@@ -54,6 +51,14 @@ slice get_owner() method_id {
     load_data();
     return ownerAddress;
 }
+
+{-
+    recv_internal() :
+        1. Deposit
+        2. Owner withdraw
+        3. Change owner
+        4. Transfer message to owner
+-}
 
 ;; recv_internal is the main function of the contract and is called when it receives a message from other contracts
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
@@ -78,18 +83,19 @@ slice get_owner() method_id {
 
     ;; Transfer messages to owner
     if(op == "transfer_msg_to_owner"c) {
-        ifnot (equal_slices(sender_address, ownerAddress)) {
-            cell msg_cell = begin_cell().store_slice(in_msg_body).end_cell();
-            cell msg = begin_cell()
-                .store_uint(0x18, 6) ;; nobounceable - 0x10, logs - 0x30
-                .store_slice(ownerAddress)
-                .store_coins(0)
-                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
-                .store_slice(sender_address)
-                .store_ref(msg_cell)
-            .end_cell();
-        send_raw_message(msg, 64);
+        if(equal_slices(sender_address, ownerAddress)) {
+            throw(404);
         }
+        cell msg_cell = begin_cell().store_slice(in_msg_body).end_cell();
+        cell msg = begin_cell()
+            .store_uint(0x18, 6) ;; nobounceable - 0x10, logs - 0x30
+            .store_slice(ownerAddress)
+            .store_coins(0)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_slice(sender_address)
+            .store_ref(msg_cell)
+        .end_cell();
+        send_raw_message(msg, 64);
         return ();                
     }
 
@@ -112,7 +118,7 @@ slice get_owner() method_id {
         cell msg = begin_cell()
                 .store_uint(0x18, 6) ;; nobounceable - 0x10, logs - 0x30
                 .store_slice(ownerAddress) ;; withdraw to owner
-                .store_coins(withdraw_amount)
+                .store_coins(send_amount)
                 .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
             .end_cell();
 
@@ -120,20 +126,13 @@ slice get_owner() method_id {
         return ();
     }
 
-    ;; Update code
-    if(op == "update_code"c) {
-        cell new_code = in_msg_body~load_ref();
-        set_code(new_code);
-        
-        cont old_code = get_c3();
-        set_c3(new_code.begin_parse().bless());
-        
-        throw(0);
-    }
-
     throw(0xffffff); ;; Op not allowed
 }
 
+{-
+    recv_external() :
+        1. Selfdestruct
+-}
 () recv_external(slice in_msg) impure {
     var signature = in_msg~load_bits(512);
     slice tmp_in_msg = in_msg;
