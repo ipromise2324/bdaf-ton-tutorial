@@ -1,4 +1,5 @@
 #include "imports/stdlib.fc";
+#include "imports/params.fc";
 
 {-
     recv_internal() :
@@ -12,6 +13,7 @@
 global int seqno; ;; Prevnet replay attack
 global int publicKey;
 global slice ownerAddress;
+const int min_ton_for_storage = 1000000000;
 
 ;; Load storage of thid contract
 () load_data() inline {
@@ -28,14 +30,29 @@ global slice ownerAddress;
 }
 
 ;; Store storage of this contract
-() store_data(int seqno, int public_key, slice owner_address) impure inline {
+() store_data(int seqno, int public_key, slice ownerAddress) impure inline {
     set_data(
         begin_cell()
             .store_uint(seqno, 32)
             .store_uint(public_key, 256)
-            .store_slice(owner_address)
+            .store_slice(ownerAddress)
         .end_cell()
     );
+}
+
+int get_smc_balance() method_id {
+    [int balance, _] = get_balance(); ;; get_balance() returns tuple [(int)balance of TON, (cell)extra currency]
+    return balance;
+}
+
+int get_seqno() method_id {
+    load_data();
+    return seqno;
+}
+
+slice get_owner() method_id {
+    load_data();
+    return ownerAddress;
 }
 
 ;; recv_internal is the main function of the contract and is called when it receives a message from other contracts
@@ -61,11 +78,11 @@ global slice ownerAddress;
 
     ;; Transfer messages to owner
     if(op == "transfer_msg_to_owner"c) {
-        ifnot (equal_slices(sender_address, owner_address)) {
+        ifnot (equal_slices(sender_address, ownerAddress)) {
             cell msg_cell = begin_cell().store_slice(in_msg_body).end_cell();
             cell msg = begin_cell()
                 .store_uint(0x18, 6) ;; nobounceable - 0x10, logs - 0x30
-                .store_slice(owner_address)
+                .store_slice(ownerAddress)
                 .store_coins(0)
                 .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
                 .store_slice(sender_address)
@@ -75,4 +92,73 @@ global slice ownerAddress;
         }
         return ();                
     }
+
+    throw_unless(411, equal_slices(sender_address, ownerAddress));
+
+    ;; Change owner
+    if (op == "change_owner"c) {
+        slice new_owner_address = in_msg_body~load_msg_addr();
+        force_chain(new_owner_address); ;; make sure the new owner is a valid address
+        store_data(seqno, publicKey, new_owner_address);
+        return ();
+    }
+
+    ;; Withdraw
+    if (op == "withdraw"c) {
+        int withdraw_amount = in_msg_body~load_coins();
+        throw_unless(412, get_smc_balance() >=  withdraw_amount); ;; make sure the smc has enough balance
+        int send_amount = min(withdraw_amount, my_balance - min_ton_for_storage);
+
+        cell msg = begin_cell()
+                .store_uint(0x18, 6) ;; nobounceable - 0x10, logs - 0x30
+                .store_slice(ownerAddress) ;; withdraw to owner
+                .store_coins(withdraw_amount)
+                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .end_cell();
+
+        send_raw_message(msg, 1);
+        return ();
+    }
+
+    ;; Update code
+    if(op == "update_code"c) {
+        cell new_code = in_msg_body~load_ref();
+        set_code(new_code);
+        
+        cont old_code = get_c3();
+        set_c3(new_code.begin_parse().bless());
+        
+        throw(0);
+    }
+
+    throw(0xffffff); ;; Op not allowed
+}
+
+() recv_external(slice in_msg) impure {
+    var signature = in_msg~load_bits(512);
+    slice tmp_in_msg = in_msg;
+    var hash = slice_hash(in_msg);
+
+    load_data();
+
+    throw_unless(401, check_signature(hash, signature, publicKey));    
+
+    int msg_seqno = tmp_in_msg~load_uint(32);
+
+    throw_unless(402, msg_seqno == seqno);
+    accept_message();
+    tmp_in_msg~touch(); ;;  If there is no remaining data in the slice, touch() will throw an exception.
+    int op = tmp_in_msg~load_uint(32);
+    if(op == "selfdestruct"c) {
+        cell msg = begin_cell()
+                .store_uint(0x18, 6) ;; nobounceable - 0x10, logs - 0x30
+                .store_slice(ownerAddress) 
+                .store_coins(0)
+                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .end_cell();
+        send_raw_message(msg, 128 + 32);
+    }
+
+    store_data(seqno + 1, publicKey, ownerAddress);
+
 }
