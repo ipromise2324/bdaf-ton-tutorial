@@ -1,5 +1,14 @@
 # bdaf_code_tutorial
+## Description
+This contract provides a simple treasury functionality. It includes the following features:
 
+- `Deposit`: Allows any address to deposit funds into the contract. The deposited funds are added to the contract's balance.
+- `Withdraw`: Allows the owner of the contract to withdraw funds. The amount to be withdrawn is specified in the function call. The function checks if the contract has enough balance before proceeding with the withdrawal.
+- `Change Owner`: Allows the current owner of the contract to transfer ownership to another address. The new owner's address is specified in the function call.
+- `Transfer Message to Owner`: Allows any address to send a message to the owner of the contract. The message is included in the function call.
+- `Self-Destruct`: Allows the owner of the contract to self-destruct the contract. When the contract is self-destructed, all remaining funds are sent to the owner, and the contract is deactivated.
+## Test
+A comprehensive suite of tests is included to ensure the contract's functionality and correctness. These tests cover all functions of the contract and check for both successful and unsuccessful function calls. 
 ## Project structure
 
 -   `contracts` - source code of all the smart contracts of the project and their dependencies.
@@ -9,6 +18,8 @@
 
 ## How to use
 
+### Install
+`yarn install`
 ### Build
 
 `npx blueprint build` or `yarn blueprint build`
