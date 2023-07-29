@@ -1,6 +1,6 @@
 # bdaf_code_tutorial
 ## Description
-This contract provides a simple treasury functionality. It includes the following features:
+This FunC contract provides a simple treasury functionality. It includes the following features:
 
 - `Deposit`: Allows any address to deposit funds into the contract. The deposited funds are added to the contract's balance.
 - `Withdraw`: Allows the owner of the contract to withdraw funds. The amount to be withdrawn is specified in the function call. The function checks if the contract has enough balance before proceeding with the withdrawal.
