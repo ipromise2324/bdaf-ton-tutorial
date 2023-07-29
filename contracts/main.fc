@@ -155,7 +155,7 @@ slice get_owner() method_id {
                 .store_coins(0)
                 .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
             .end_cell();
-        send_raw_message(msg, 128 + 32);
+        send_raw_message(msg, 128 + 32); ;; This mode will destroy the contract
     }
 
     store_data(seqno + 1, publicKey, ownerAddress);
