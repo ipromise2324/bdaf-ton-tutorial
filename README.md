@@ -9,6 +9,9 @@ This FunC contract provides a simple treasury functionality. It includes the fol
 - `Self-Destruct`: Allows the owner of the contract to self-destruct the contract. When the contract is self-destructed, all remaining funds are sent to the owner, and the contract is deactivated.
 ## Test
 A comprehensive suite of tests is included to ensure the contract's functionality and correctness. These tests cover all functions of the contract and check for both successful and unsuccessful function calls. 
+
+## Interacting with the contract
+*.ts files in `scripts` folder for interacting with the contract on the TON testnet are also included.
 ## Project structure
 
 -   `contracts` - source code of all the smart contracts of the project and their dependencies.
