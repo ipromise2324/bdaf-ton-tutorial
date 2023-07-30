@@ -1,1 +1,0 @@
-export const mnemonics = 'say chair tunnel corn roast faith ten amused rose minor symptom west outdoor fiscal february book silver brick team oxygen bag patch market obscure';
