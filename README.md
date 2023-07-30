@@ -33,6 +33,11 @@ A comprehensive suite of tests is included to ensure the contract's functionalit
 
 ### Deploy or run another script
 
+Befoer deploying contract to TON blockchain, you have to write your `mnemonics` in "./helpers/utils/config.ts".
+```
+cp ./helpers/utils/example_config.ts ./helpers/utils/config.ts
+```
+
 `npx blueprint run` or `yarn blueprint run`
 
 ### Add a new contract
