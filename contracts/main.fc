@@ -84,7 +84,7 @@ slice get_owner() method_id {
     ;; Transfer messages to owner
     if(op == "transfer_msg_to_owner"c) {
         if(equal_slices(sender_address, ownerAddress)) {
-            throw(404);
+            throw(404); ;; Owner cannot send message to itself
         }
         cell msg_cell = begin_cell().store_slice(in_msg_body).end_cell();
         cell msg = begin_cell()
@@ -99,12 +99,12 @@ slice get_owner() method_id {
         return ();                
     }
 
-    throw_unless(411, equal_slices(sender_address, ownerAddress));
+    throw_unless(411, equal_slices(sender_address, ownerAddress)); ;; Only owner can call change_owner() and withdraw()
 
     ;; Change owner
     if (op == "change_owner"c) {
         slice new_owner_address = in_msg_body~load_msg_addr();
-        force_chain(new_owner_address); ;; make sure the new owner is a valid address
+        force_chain(new_owner_address); ;; Make sure the new owner is a valid address
         store_data(seqno, publicKey, new_owner_address);
         return ();
     }
@@ -112,7 +112,7 @@ slice get_owner() method_id {
     ;; Withdraw
     if (op == "withdraw"c) {
         int withdraw_amount = in_msg_body~load_coins();
-        throw_unless(412, get_smc_balance() >=  withdraw_amount); ;; make sure the smc has enough balance
+        throw_unless(412, get_smc_balance() >=  withdraw_amount); ;; Make sure the smc has enough balance
         int send_amount = min(withdraw_amount, my_balance - min_ton_for_storage);
 
         cell msg = begin_cell()
@@ -140,11 +140,11 @@ slice get_owner() method_id {
 
     load_data();
 
-    throw_unless(401, check_signature(hash, signature, publicKey));    
+    throw_unless(401, check_signature(hash, signature, publicKey)); ;; Revert on wrong signature
 
     int msg_seqno = tmp_in_msg~load_uint(32);
 
-    throw_unless(402, msg_seqno == seqno);
+    throw_unless(402, msg_seqno == seqno); ;; Revert if the sequence number of the incoming message does not match the stored sequence number
     accept_message();
     tmp_in_msg~touch(); ;;  If there is no remaining data in the slice, touch() will throw an exception.
     int op = tmp_in_msg~load_uint(32);
@@ -159,5 +159,4 @@ slice get_owner() method_id {
     }
 
     store_data(seqno + 1, publicKey, ownerAddress);
-
 }
