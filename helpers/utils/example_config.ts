@@ -1,1 +1,1 @@
-export const mnemonics = '';
+export const mnemonics = 'car promise ...';
