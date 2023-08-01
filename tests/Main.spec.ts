@@ -88,12 +88,12 @@ describe('Main', () => {
         const sender = await blockchain.treasury('sender');
         await main.sendDeposit(sender.getSender(), depositAmount);
         const balanceBefore = await main.getBalance();
+        //console.log('Contract balance (Before):',balanceBefore);
         // Now try to withdraw
         const withdrawResult = await main.sendWithdraw(owner.getSender(), {
             value: toNano('0.05'),
             amount: withdrawAmount
         });
-    
         // Check that the transaction was successful
         expect(withdrawResult.transactions).toHaveTransaction({
             from: owner.address,
@@ -103,7 +103,10 @@ describe('Main', () => {
     
         // Check that the balance of the contract has decreased by the correct amount
         const balanceAfter = await main.getBalance();
-        expect(balanceAfter).toBeLessThan(balanceBefore);
+        //console.log('Contract balance (After):',balanceAfter);
+        const diff = Number(balanceBefore) - Number(balanceAfter);
+        console.log('Diff:',diff);
+        expect(diff).toBeGreaterThanOrEqual(toNano('0.955'));
     });
     
     
