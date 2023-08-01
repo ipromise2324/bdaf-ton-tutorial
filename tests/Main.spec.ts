@@ -54,6 +54,10 @@ describe('Main', () => {
 
     it('should accept deposit', async () => {
         const sender = await blockchain.treasury('sender');
+        const balanceBefore = await main.getBalance();
+        const senderBalanceBefore = await sender.getBalance();
+        // console.log('Contract balance (Before):',balanceBefore);
+        // console.log('Sender Balance (Before):',senderBalanceBefore);
         const depositResult = await main.sendDeposit(sender.getSender(), toNano('2'));
 
         expect(depositResult.transactions).toHaveTransaction({
@@ -62,8 +66,18 @@ describe('Main', () => {
             success: true,
         });
 
-        const balance = await main.getBalance();
-        expect(balance).toBeGreaterThan(toNano('1.99'));
+        const balanceAfter = await main.getBalance();
+        const senderBalanceAfter = await sender.getBalance();
+        // console.log('Contract balance (After):',senderBalanceAfter);
+        // console.log('Sender Balance (After):',balanceAfter);
+        const senderdiff = Number(senderBalanceBefore) - Number(senderBalanceAfter)
+        const contractdiff = Number(balanceAfter) - Number(balanceBefore);
+        console.log('Sender diff:',senderdiff);
+        console.log('Contract diff:',contractdiff);
+        expect(senderdiff).toBeGreaterThan(toNano('2'));
+        expect(contractdiff).toBeGreaterThan(toNano('1.99'));
+        
+        //expect(balance).toBeGreaterThan(toNano('1.99'));
     });
 
     it('should allow owner to withdraw funds', async () => {
