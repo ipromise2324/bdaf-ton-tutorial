@@ -187,47 +187,47 @@ describe('Main', () => {
         });
     });
     
-    // it('should not allow owner to send message to himself', async () => {
-    //     // Define the message content
-    //     const messageContent = "Hello, owner!";
+    it('should not allow owner to send message to himself', async () => {
+        // Define the message content
+        const password = 123456;
     
-    //     // Send the message to the contract
-    //     const sendMessageResult = await main.sendMessageToOwner(owner.getSender(), {
-    //         value: toNano('0.5')
-    //     });
+        // Send the message to the contract
+        const sendMessageResult = await main.sendMessageToOwner(owner.getSender(), {
+            value: toNano('0.5'),
+            password
+        });
     
-    //     // Check that the transaction was not successful
-    //     expect(sendMessageResult.transactions).toHaveTransaction({
-    //         from: owner.address,
-    //         to: main.address,
-    //         success: false, // Assuming that the transaction should fail
-    //     });
-    // });
+        // Check that the transaction was not successful
+        expect(sendMessageResult.transactions).toHaveTransaction({
+            from: owner.address,
+            to: main.address,
+            success: false, // Assuming that the transaction should fail
+        });
+    });
     
-    // it('should sign and selfdestruct contract', async () => {
-    //     const selfDestructResult = await main.sendExtMessage({
-    //         opCode: Opcodes.selfdestruct,
-    //         signFunC: (buf) => sign(buf, kp.secretKey),
-    //         seqno: 0
-    //     });
+    it('should sign and selfdestruct contract', async () => {
+        const selfDestructResult = await main.sendExtMessage({
+            opCode: Opcodes.selfdestruct,
+            signFunC: (buf) => sign(buf, kp.secretKey),
+            seqno: 0
+        });
         
-    //     expect(selfDestructResult.transactions).toHaveTransaction({
-    //         from: main.address,
-    //         to: owner.address,
-    //         success: true,
-    //     });
-    // });
+        expect(selfDestructResult.transactions).toHaveTransaction({
+            from: main.address,
+            to: owner.address,
+            success: true,
+        });
+    });
 
-    // it('should fail on wrong signature', async () => {
-    //     const badKp = await randomKp();
-    //     expect.assertions(2); // specify how many assertions are expected to be called
-    //     await expect(
-    //         main.sendExtMessage({
-    //             opCode: Opcodes.selfdestruct,
-    //             signFunC: (buf) => sign(buf, badKp.secretKey),
-    //             seqno: 0
-    //         })
-    //     ).rejects.toThrow('Error executing transaction');
+    it('should fail on wrong signature', async () => {
+        const badKp = await randomKp();
+        await expect(
+            main.sendExtMessage({
+                opCode: Opcodes.selfdestruct,
+                signFunC: (buf) => sign(buf, badKp.secretKey),
+                seqno: 0
+            })
+        ).rejects.toThrow('Error executing transaction');
 
-    // });
+    });
 });

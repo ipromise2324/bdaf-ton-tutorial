@@ -10,7 +10,8 @@ export async function run(provider: NetworkProvider, args: string[]) {
     const main = provider.open(Main.createFromAddress(address));
 
     await main.sendMessageToOwner(provider.sender(), {
-        value: toNano('0.05')
+        value: toNano('0.05'),
+        password: 123456
     });
 
     ui.write('Succesfully transfered!');
