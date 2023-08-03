@@ -79,6 +79,7 @@ export class Main implements Contract {
     async sendMessageToOwner (provider: ContractProvider, via: Sender,
         opts:{
             value: bigint,
+            password: number
         })
     {
         await provider.internal(via, {
@@ -86,6 +87,7 @@ export class Main implements Contract {
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: beginCell()
                 .storeUint(Opcodes.transferMsgToOwner, 32)
+                .storeUint(opts.password, 32)
             .endCell(),
         });
     }
