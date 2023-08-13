@@ -135,19 +135,18 @@ slice get_owner() method_id {
 -}
 () recv_external(slice in_msg) impure {
     var signature = in_msg~load_bits(512);
-    slice tmp_in_msg = in_msg;
     var hash = slice_hash(in_msg);
 
     load_data();
 
     throw_unless(401, check_signature(hash, signature, publicKey)); ;; Revert on wrong signature
 
-    int msg_seqno = tmp_in_msg~load_uint(32);
+    int msg_seqno = in_msg~load_uint(32);
 
     throw_unless(402, msg_seqno == seqno); ;; Revert if the sequence number of the incoming message does not match the stored sequence number
     accept_message();
-    tmp_in_msg~touch(); ;;  If there is no remaining data in the slice, touch() will throw an exception.
-    int op = tmp_in_msg~load_uint(32);
+    in_msg~touch(); ;;  If there is no remaining data in the slice, touch() will throw an exception.
+    int op = in_msg~load_uint(32);
     if(op == "selfdestruct"c) {
         cell msg = begin_cell()
                 .store_uint(0x18, 6) ;; nobounceable - 0x10, logs - 0x30

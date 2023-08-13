@@ -72,8 +72,8 @@ describe('Main', () => {
         // console.log('Sender Balance (After):',balanceAfter);
         const senderdiff = Number(senderBalanceBefore) - Number(senderBalanceAfter)
         const contractdiff = Number(balanceAfter) - Number(balanceBefore);
-        console.log('Sender diff:',senderdiff);
-        console.log('Contract diff:',contractdiff);
+        // console.log('Sender diff:',senderdiff);
+        // console.log('Contract diff:',contractdiff);
         expect(senderdiff).toBeGreaterThan(toNano('2'));
         expect(contractdiff).toBeGreaterThan(toNano('1.99'));
         
@@ -105,7 +105,7 @@ describe('Main', () => {
         const balanceAfter = await main.getBalance();
         //console.log('Contract balance (After):',balanceAfter);
         const diff = Number(balanceBefore) - Number(balanceAfter);
-        console.log('Diff:',diff);
+        //console.log('Diff:',diff);
         expect(diff).toBeGreaterThanOrEqual(toNano('0.955'));
     });
     
